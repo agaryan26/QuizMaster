@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuizMaster</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --bg:#f4f5f7;--surface:#ffffff;--ink:#1d2330;--muted:#5d6678;--line:#d9dde5;
+  --accent:#2954c8;--accent-ink:#ffffff;--ok:#1b7a43;--ok-bg:#e6f4ec;--bad:#b3261e;--bad-bg:#fbeae9;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#14171d;--surface:#1c2028;--ink:#e8ebf1;--muted:#9aa3b5;--line:#313746;
+    --accent:#6f93ff;--accent-ink:#0f1420;--ok:#6fd195;--ok-bg:#16291f;--bad:#ff8f87;--bad-bg:#32191a;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#14171d;--surface:#1c2028;--ink:#e8ebf1;--muted:#9aa3b5;--line:#313746;
+  --accent:#6f93ff;--accent-ink:#0f1420;--ok:#6fd195;--ok-bg:#16291f;--bad:#ff8f87;--bad-bg:#32191a;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif}
+header{background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{max-width:720px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-weight:700;font-size:1.15rem;letter-spacing:-.01em;cursor:pointer;background:none;border:0;color:var(--ink);padding:0}
+#who{color:var(--muted);font-size:.9rem}
+main{max-width:720px;margin:0 auto;padding:28px 20px 56px}
+h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:36px 0 12px}
+p.lead{margin:0 0 22px;color:var(--muted)}
+label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+input{width:100%;max-width:320px;padding:10px 12px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.err{color:var(--bad);font-size:.9rem;margin:6px 0 0;min-height:1.4em}
+.list{margin-top:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;text-align:left;padding:14px 16px;font:inherit;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);cursor:pointer}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--bg)}
+.row b{display:block}
+.row small{color:var(--muted);font-size:.88rem}
+.meta{color:var(--muted);font-size:.85rem;white-space:nowrap}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.tab{font:inherit;background:none;border:0;border-bottom:2px solid transparent;padding:8px 14px;color:var(--muted);cursor:pointer;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent);font-weight:600}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--muted)}
+.empty{color:var(--muted);padding:18px 0}
+.linkbtn{font:inherit;font-size:.88rem;color:var(--muted);background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;margin-top:12px}
+.top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;color:var(--muted);font-size:.92rem}
+#clock{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink)}
+#clock.low{color:var(--bad)}
+.track{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:26px}
+.fill{height:100%;background:var(--accent)}
+.q{font-size:1.3rem;line-height:1.4;margin:0 0 20px;font-weight:600}
+.opt{display:flex;gap:12px;width:100%;text-align:left;margin-bottom:10px;padding:12px 14px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt i{font-style:normal;color:var(--muted);min-width:1.2em}
+.actions{display:flex;gap:12px;align-items:center;margin-top:22px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:600;padding:10px 20px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:none;color:var(--ink);border-color:var(--line)}
+.score{font-size:3rem;font-weight:700;line-height:1.1;margin:4px 0}
+.stats{color:var(--muted);margin:0 0 6px}
+.rev{border-top:1px solid var(--line);padding:16px 0}
+.rev p{margin:0 0 6px}
+.rev .tag{font-weight:600}
+.rev.ok .tag{color:var(--ok)}
+.rev.no .tag{color:var(--bad)}
+.rev .ans{font-size:.95rem;color:var(--muted)}
+.rev .ans b{color:var(--ink);font-weight:600}
+@media (max-width:480px){main{padding-top:20px}.q{font-size:1.15rem}.score{font-size:2.5rem}}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .4s linear}}
+</style>
+</head>
+<body>
+<header><div class="bar"><button class="brand" id="home">QuizMaster</button><span id="who"></span></div></header>
+<main id="app"></main>
+<script>
+var CATS=[
+{name:"HTML",desc:"Tags, attributes and page structure",qs:[
+["Which tag creates a hyperlink?",["<a>","<link>","<href>","<nav>"],0],
+["Which is the largest heading tag?",["<h6>","<h1>","<head>","<header>"],1],
+["Which attribute gives an image alternative text?",["title","src","alt","name"],2],
+["Which element contains the visible content of a page?",["<head>","<meta>","<title>","<body>"],3],
+["Which tag starts an ordered (numbered) list?",["<ul>","<ol>","<li>","<dl>"],1],
+["Which HTML5 element holds a group of navigation links?",["<menu>","<nav>","<links>","<list>"],1]]},
+{name:"CSS",desc:"Selectors, layout and styling",qs:[
+["Which property changes the colour of text?",["font-color","text-color","color","fg-color"],2],
+["Which selector targets the element with id “box”?",[".box","#box","box","*box"],1],
+["Which declaration creates a flex container?",["display: flex","flex: container","layout: flex","position: flex"],0],
+["Which property adds space outside an element’s border?",["padding","margin","spacing","outline"],1],
+["Which unit is relative to the root font size?",["em","px","rem","vh"],2],
+["What is the default value of the position property?",["static","relative","absolute","fixed"],0]]},
+{name:"JavaScript",desc:"Variables, operators and built-ins",qs:[
+["Which keyword declares a block-scoped variable?",["var","let","int","dim"],1],
+["What does typeof null return?",["\"null\"","\"undefined\"","\"object\"","\"number\""],2],
+["Which array method adds an item to the end?",["push()","pop()","shift()","slice()"],0],
+["What does the === operator compare?",["Value only","Value and type","Type only","Memory address only"],1],
+["Which method turns a JSON string into an object?",["JSON.parse()","JSON.stringify()","JSON.object()","Object.json()"],0],
+["What is the result of 2 + \"2\" in JavaScript?",["4","\"22\"","NaN","An error"],1]]},
+{name:"Python",desc:"Syntax, types and functions",qs:[
+["Which brackets create a list?",["( )","[ ]","{ }","< >"],1],
+["What does len(\"hello\") return?",["4","5","6","An error"],1],
+["Which keyword defines a function?",["function","func","def","fn"],2],
+["Which symbol starts a single-line comment?",["//","#","--","/*"],1],
+["What is the result of 3 / 2 in Python 3?",["1","1.5","2","An error"],1],
+["Which of these types is immutable?",["list","dict","set","tuple"],3]]},
+{name:"General Knowledge",desc:"Geography, science and literature",qs:[
+["What is the capital of Australia?",["Sydney","Canberra","Melbourne","Perth"],1],
+["Which planet is known as the Red Planet?",["Venus","Jupiter","Mars","Mercury"],2],
+["What is the chemical symbol for gold?",["Au","Ag","Gd","Go"],0],
+["Which is the largest ocean on Earth?",["Atlantic","Indian","Arctic","Pacific"],3],
+["Who wrote “Romeo and Juliet”?",["Charles Dickens","William Shakespeare","Jane Austen","Mark Twain"],1],
+["How many continents are there?",["5","6","7","8"],2]]}
+];
+var SECS_PER_Q=20;
+var app=document.getElementById("app");
+var whoEl=document.getElementById("who");
+var tab="history", run=null, timer=null;
+
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function fmt(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function stop(){if(timer){clearInterval(timer);timer=null}}
+function user(){return load("qm_name","")}
+
+function home(){
+  stop();run=null;
+  var n=user();
+  whoEl.textContent=n?"Signed in as "+n:"";
+  app.innerHTML='<h1>Choose a quiz</h1><p class="lead">Each quiz has six multiple-choice questions and a countdown timer.</p>'+
+   '<label for="name">Your name</label><input id="name" maxlength="20" autocomplete="off" value="'+esc(n)+'"><p class="err" id="err" role="alert"></p>'+
+   '<div class="list">'+CATS.map(function(c,i){return '<button class="row" data-i="'+i+'"><span><b>'+esc(c.name)+'</b><small>'+esc(c.desc)+'</small></span><span class="meta">'+c.qs.length+' questions, '+fmt(c.qs.length*SECS_PER_Q)+' min</span></button>'}).join("")+'</div>'+
+   '<h2>Records</h2><div class="tabs" role="tablist"><button class="tab" role="tab" data-t="history">My history</button><button class="tab" role="tab" data-t="board">Leaderboard</button></div><div id="rec"></div>';
+  records();
+}
+function records(){
+  var all=load("qm_results",[]), el=document.getElementById("rec");
+  document.querySelectorAll(".tab").forEach(function(b){b.setAttribute("aria-selected",b.dataset.t===tab)});
+  var rows,head;
+  if(tab==="history"){
+    rows=all.filter(function(r){return r.name===user()}).slice(-10).reverse();
+    head="<tr><th>Date</th><th>Quiz</th><th>Score</th><th>Time</th></tr>";
+    rows=rows.map(function(r){return "<tr><td>"+esc(r.date)+"</td><td>"+esc(r.cat)+"</td><td>"+r.score+"/"+r.total+"</td><td>"+fmt(r.time)+"</td></tr>"}).join("");
+  }else{
+    var s=all.slice().sort(function(a,b){return b.score/b.total-a.score/a.total||a.time-b.time}).slice(0,10);
+    head="<tr><th>Rank</th><th>Name</th><th>Quiz</th><th>Score</th><th>Time</th></tr>";
+    rows=s.map(function(r,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(r.name)+"</td><td>"+esc(r.cat)+"</td><td>"+r.score+"/"+r.total+"</td><td>"+fmt(r.time)+"</td></tr>"}).join("");
+  }
+  el.innerHTML=rows?'<div class="scroll"><table>'+head+rows+'</table></div><button class="linkbtn" id="clear">Clear all records</button>':'<p class="empty">No results yet. Finish a quiz and it will appear here.</p>';
+}
+function start(i){
+  var inp=document.getElementById("name");
+  var nm=inp?inp.value.trim():user();
+  if(!nm){document.getElementById("err").textContent="Enter your name to begin.";inp.focus();return}
+  save("qm_name",nm);whoEl.textContent="Signed in as "+nm;
+  var c=CATS[i];
+  var qs=shuffle(c.qs).map(function(q){
+    var correct=q[1][q[2]], opts=shuffle(q[1]);
+    return {q:q[0],opts:opts,ans:opts.indexOf(correct),pick:-1};
+  });
+  run={cat:c.name,qs:qs,i:0,total:qs.length*SECS_PER_Q,left:qs.length*SECS_PER_Q};
+  stop();timer=setInterval(tick,1000);
+  question();
+}
+function tick(){
+  run.left--;
+  var c=document.getElementById("clock");
+  if(c){c.textContent=fmt(Math.max(run.left,0));c.classList.toggle("low",run.left<=20)}
+  if(run.left<=0)finish();
+}
+function question(){
+  var q=run.qs[run.i], last=run.i===run.qs.length-1;
+  app.innerHTML='<div class="top"><span>Question '+(run.i+1)+' of '+run.qs.length+' in '+esc(run.cat)+'</span><span>Time left <span id="clock">'+fmt(run.left)+'</span></span></div>'+
+   '<div class="track"><div class="fill" style="width:'+(run.i/run.qs.length*100)+'%"></div></div>'+
+   '<p class="q">'+esc(q.q)+'</p>'+
+   q.opts.map(function(o,k){return '<button class="opt" data-k="'+k+'" aria-pressed="'+(q.pick===k)+'"><i>'+"ABCD"[k]+'</i><span>'+esc(o)+'</span></button>'}).join("")+
+   '<div class="actions"><button class="btn" id="next"'+(q.pick<0?" disabled":"")+'>'+(last?"Finish quiz":"Next question")+'</button><button class="btn ghost" id="quit">Quit</button></div>';
+  document.getElementById("clock").classList.toggle("low",run.left<=20);
+}
+function finish(){
+  stop();
+  var score=run.qs.filter(function(q){return q.pick===q.ans}).length;
+  var used=run.total-Math.max(run.left,0);
+  var d=new Date();
+  var all=load("qm_results",[]);
+  all.push({name:user(),cat:run.cat,score:score,total:run.qs.length,time:used,date:d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})});
+  save("qm_results",all.slice(-200));
+  var pct=Math.round(score/run.qs.length*100);
+  var msg=pct===100?"Perfect score.":pct>=70?"Well done.":pct>=40?"A fair attempt. Review the answers below and try again.":"Keep practising. Review the answers below and try again.";
+  var timedOut=run.left<=0;
+  app.innerHTML='<h1>'+(timedOut?"Time is up":"Quiz complete")+'</h1><div class="score">'+score+' / '+run.qs.length+'</div>'+
+   '<p class="stats">'+pct+'% correct in '+fmt(used)+'. '+msg+'</p>'+
+   '<div class="actions"><button class="btn" id="retry">Retake '+esc(run.cat)+'</button><button class="btn ghost" id="back">Choose another quiz</button></div>'+
+   '<h2>Answer review</h2>'+
+   run.qs.map(function(q,n){
+     var ok=q.pick===q.ans, skipped=q.pick<0;
+     return '<div class="rev '+(ok?"ok":"no")+'"><p><span class="tag">'+(ok?"Correct":skipped?"Not answered":"Incorrect")+'</span> &nbsp;'+(n+1)+'. '+esc(q.q)+'</p>'+
+     (ok?'<p class="ans">Your answer: <b>'+esc(q.opts[q.pick])+'</b></p>':
+     (skipped?'':'<p class="ans">Your answer: '+esc(q.opts[q.pick])+'</p>')+'<p class="ans">Correct answer: <b>'+esc(q.opts[q.ans])+'</b></p>')+'</div>';
+   }).join("");
+  window.scrollTo(0,0);
+}
+
+document.addEventListener("click",function(e){
+  var t=e.target.closest("button");if(!t)return;
+  if(t.id==="home"){if(run&&!confirm("Leave this quiz? Your progress will be lost."))return;home();return}
+  if(t.classList.contains("row"))return start(+t.dataset.i);
+  if(t.classList.contains("tab")){tab=t.dataset.t;return records()}
+  if(t.id==="clear"){if(confirm("Delete all saved results from this browser?")){save("qm_results",[]);records()}return}
+  if(t.classList.contains("opt")){run.qs[run.i].pick=+t.dataset.k;return question()}
+  if(t.id==="next"){if(run.i<run.qs.length-1){run.i++;question()}else finish();return}
+  if(t.id==="quit"){if(confirm("Quit this quiz? Your progress will be lost."))home();return}
+  if(t.id==="retry"){var idx=CATS.findIndex(function(c){return c.name===run.cat});return start(idx)}
+  if(t.id==="back")return home();
+});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"&&e.target.id==="name"){var f=document.querySelector(".row");if(f)f.focus()}
+});
+home();
+</script>
+</body>
+</html>
